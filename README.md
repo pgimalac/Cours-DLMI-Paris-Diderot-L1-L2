@@ -8,3 +8,20 @@ Pour la troisème année, voir par exemple https://github.com/xavitator/Cours_Ma
 En première année j'ai eu tendance à ajouter des morceaux non vus en cours et à mettre beaucoup d'images.
 
 J'ai tendance à ne pas finir de mettre en pages certains cours.
+
+## Architecture
+
+- S1 :
+    - MM1 (Algèbre et Analyse Élémentaire I)
+    - PF1 (Principes de Fonctionnement des Machines Binaires)
+    - PH1 (Physique I)
+- S2 :
+    - CI2 (Concepts Informatiques)
+    - MMAL2 (Algèbre Elémentaire II)
+    - MMAN2 (Analyse Elémentaire II)
+    - PH2 (Physique II)
+- S3 :
+    - IA3 (Introduction à l'Arithmétique III)
+    - MM3 (Algèbre et Analyse Elémentaire I)
+- S4 :
+    - PS4 (Probabilités IV)
