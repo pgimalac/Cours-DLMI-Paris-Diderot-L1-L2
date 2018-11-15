@@ -1,0 +1,557 @@
+\documentclass[a4paper,10pt]{book} %type de document et paramètres
+
+
+\usepackage[utf8]{inputenc} %package fondamental
+\usepackage[T1]{fontenc} %package fondamental
+\usepackage[english,francais]{babel} %package de langues
+\usepackage{lmodern} %police de caractère
+
+\usepackage[top=3cm, bottom=3cm, left=4cm, right=2cm]{geometry} %permet de paramétrer les marges par défaut
+\usepackage{changepage} %permet de modifier localement une mise en page (marges,...) : utilisé pour la page de garde
+\usepackage{multicol} %permet de mettre plusieurs colonnes (\begin{multicols}{2} \end{multicols} jusqu'à 10 colonnes)
+\usepackage[pdftex, pdfauthor={Pierre Gimalac}, pdftitle={Concepts Informatiques II}, pdfsubject={Informatique}, pdfkeywords={Informatique, CI2}, colorlinks=true, linkcolor=black]{hyperref} %permet de se déplacer dans le pdf depuis le sommaire en cliquant sur les titres, ainsi que de parametrer les meta données du PDF
+\usepackage{url} %permet de mettre des URL actifs \url{}
+\let\urlorig\url
+\renewcommand{\url}[1]{\begin{otherlanguage}{english}\urlorig{#1}\end{otherlanguage}}
+
+\usepackage{graphicx} %permet d'insérer des images proprement (ajoute des parametres)
+\usepackage{wrapfig} %permet de mettre des images à coté d'un texte
+\usepackage{pdfpages} %permet d'insérer un pdf \includepdf[pages={1-2}]{truc.pdf}
+
+\usepackage{tikz} %package trooop bien permet de dessiner tout et n'importe quoi ! \begin{tikzpicture}
+\usepackage{listings} %permet d'inserer du code dans le fichier (\lstset{language=Java} \begin{lstlisting} \end{lstlisting} )
+
+\begin{document}
+
+\begin{titlepage}
+\newgeometry{margin=2.7cm}
+\thispagestyle{empty}
+\begin{center}
+\vspace*{7cm}
+\Huge \textsc{Concepts Informatiques II}\\
+\vspace{1.5cm}
+\Large Pierre Gimalac\\
+\vspace{0.5cm}
+\large \textit{Licence d'Informatique}
+\vfill
+\end{center}
+\large \textit{Janvier - Mai 2017}
+\hfill 
+\large Cours de Matthieu Picantin
+\restoregeometry
+\end{titlepage}
+
+\lstset{language=Java}
+
+\renewcommand{\contentsname}{Sommaire}
+\thispagestyle{empty}
+\tableofcontents
+\thispagestyle{empty}
+
+\chapter*{Introduction}
+<<Ce cours \textit{Concepts Informatiques II} peut être suivi par tout étudiant ayant des connaissances minimales en programmation, via le cours \textit{Introduction à la Programmation I} essentiellement. Il est une suite naturelle du cours \textit{Principes de Fonctionnement des Machines Binaires I}, lequel est moins nécessaire mais pas inutile.\\\\
+Il s'articule selon deux axes. On étudie d’abord d’un point de vue des machines comment différentes constructions des langages de haut-niveau sont implantées (variables globales, pointeurs, références, fonctions, paramètres, variables locales…) On s’intéresse ensuite à la récursion et ses différentes applications (types récursifs, fonction récursives, élimination de la récursion, optimisation, backtracking…).\\\\
+Dans le fil du cours, on s’emploie à traduire (compiler) des programmes dans des formes plus proches de celles acceptées par les machines.>>\\
+
+\textit{Matthieu Picantin}
+
+
+% ------------------------------------------------------------------------------------------------------ %
+% ------------------------------------------------------------------------------------------------------ %
+
+
+
+% ------------------------------------------------------------------------------------------------------ %
+% ------------------------------------------------------------------------------------------------------ %
+
+
+\chapter{La mémoire}
+La mémoire dans un ordinateur est une succession d’octets (soit 8 bits), organisés les uns à la suite des autres et directement accessibles par une adresse.
+En java, la mémoire pour stocker des variables est organisée en deux catégories : \textit{la pile (stack)} et \textit{le tas (heap)}.
+
+\section{Pile et tas}
+\subsection{Pile}
+La pile (stack) est un espace mémoire réservé au stockage des variables désallouées automatiquement.\\
+
+La pile est bâtie sur le modèle LIFO (Last In First Out) ce qui signifie "Dernier Entré Premier Sorti". C'est-à-dire que cet espace mémoire est comme une ('vraie') pile où on a le droit d’empiler ou de dépiler au sommet de la pile qu’une seule chose à la fois, bien qu'on puisse empiler des choses de taille différente.\\
+
+Quand on les "dépile" on le fait en commençant de même par le dernier élément entré (le haut de la pile). Lorsqu’une valeur est dépilée elle est effacée de la mémoire.\\
+
+Dans la mémoire, la pile sert à stocker les variables ayant un type 'de base' (int, long, char,...) ainsi que les références des objets (String par exemple) et des tableaux.
+
+\subsection{Tas}
+Le tas (heap) est l’autre segment de mémoire utilisé lors de l’allocation dynamique de mémoire durant l’exécution d’un programme informatique.\\
+
+Il sert à stocker les valeurs des objets ainsi que le contenu des tableaux
+
+\newpage
+
+\section{Évolution de la mémoire}
+\subsection{Principe}
+On représente l'évolution de la mémoire lors de l’exécution d'un programme sur deux colonnes : la pile et le tas.\\
+Dans chaque colonne on note ce qu'elle contient : les références et valeurs des types usuels dans la pile et les tableaux et valeurs des objets dans le tas.
+
+\subsection{Exemple}
+On prend l'exemple du programme ci-dessous :
+\begin{lstlisting}
+public static void exemple(){
+    int n=3; int s=0;
+    int[] t=new int[n];
+    for (int i=1;i<=n;i++){ 
+    	s+=i;
+    	t[i-1]=s;
+    }
+    int z=n+s;
+}
+\end{lstlisting}
+
+\bigskip\bigskip
+
+L'évolution de la mémoire lors de l’exécution de ce programme est celle-ci :\\\\
+
+\textbf{État initial (avant la boucle) :}
+
+\setlength{\columnseprule}{1pt}
+\begin{multicols}{2} \begin{center}
+Pile\\
+\phantom{a}
+
+$\begin{array}{rcl} \textbf{n} &:& \fbox{00000003}\\
+\textbf{s} &:& \fbox{00000000}\\
+\textbf{t} &:& \fbox{I@4AfBF04A}
+\end{array}$\\
+
+Tas
+
+\phantom{aaaa}t[0]\phantom{aaaaaa}t[1]\phantom{aaaaaa}t[2]\phantom{}
+
+\fbox{00000000}\fbox{00000000}\fbox{00000000}\\
+
+\phantom{a}
+
+\end{center}\end{multicols}
+
+
+\bigskip \bigskip
+\textbf{État final :}
+
+\begin{multicols}{2} \begin{center}
+Pile\\
+\phantom{a}
+
+$\begin{array}{rcl}
+\textbf{n} &:& \fbox{00000003}\\
+\textbf{s} &:& \fbox{00000006}\\
+\textbf{t} &:& \fbox{I@4AfBF04A}\\
+\textbf{z} &:& \fbox{00000009}
+\end{array}$\\
+
+Tas
+
+\phantom{aaaa}t[0]\phantom{aaaaaa}t[1]\phantom{aaaaaa}t[2]\phantom{}
+
+\fbox{00000001}\fbox{00000003}\fbox{00000006}\\
+
+\phantom{a}
+
+\phantom{a}
+
+\phantom{a}
+
+\end{center}\end{multicols}
+
+\bigskip\bigskip
+
+Entre l'état initial et l'état final, la variable \textbf{i} a été créée (mais elle n'est plus là à la fin puisqu'elle a été créée dans une boucle) et a pris les valeurs de 0 à 4, \textbf{s} a pris successivement les valeurs 0, 1, 3 et 6 et le tableau \textbf{t} a ainsi été rempli au fur et à mesure.\\
+Enfin \textbf{z} a été créée à la fin.
+
+\newpage
+
+\section{Automate à pile}
+\subsection{Principe}
+Une AAP a pour tâche de vérifier qu’un mot donné (une succession de caractères) possède une certaine propriété. La particularité d’une AAP est qu’elle n’a comme mémoire qu’une pile : on ne peut donc pas par exemple manipuler une variable entière pour implémenter un compteur. Les opérations d’un AAP se limitent donc à examiner le prochain caractère du mot à valider, et les opérations fondamentales de pile.
+
+\subsection{Méthodes d'une pile}
+Ici on utilise une pile d'\textit{objet} (souvent des entiers ou des chaînes de caractères) qui possède des méthodes propres : 
+\begin{enumerate}
+\item \textit{Objet pop()} qui renvoie le dernier élément de la pile (et l'enlève de celle-ci)
+\item \textit{void push(Objet a)} qui met l'objet a en haut de la pile
+\item \textit{Objet top()} qui renvoie le premier élément de la pile sans l'enlever
+\end{enumerate}
+
+\subsection{Conversion de la forme infixe à la forme postfixe}
+On se sert d'une pile et d'une chaîne de caractères :
+\begin{lstlisting}
+static String fromInToPost(String a){
+    Pile<String> p = new Pile<String>();
+    	//on utilise une pile de chaines de caracteres
+    String res="";
+    for (int i = 0; i < a.length(); i++) {
+        if (a.charAt(i) == ')'){ res+=p.pop(); }
+        else if (a.charAt(i) == '('){ continue; }
+        else if ((a.charAt(i) == '+') || (a.charAt(i) == '*')){
+            p.push(a.charAt(i));
+        }
+        else if((a.charAt(i) >= '0') && (a.charAt(i) <= '9')){
+            res +=a.charAt(i);
+        }
+    }
+    while (!p.estVide()){ res+=p.pop(); }
+  	return res;
+}
+\end{lstlisting}
+
+\subsection{Évaluation d'une forme postfixe}
+
+\begin{lstlisting}
+static String fromPostToIn(String a){
+	Pile<String> p = new Pile<String>();
+		//on utilise une pile de chaines de caracteres
+	for (int i = 0; i < a.length(); i++) {
+	    if ((a.charAt(i) == '+')||(a.charAt(i) == '*')){
+	        String tmp=p.pop();
+	        p.push("("+p.depiler() +a.charAt(i)+ tmp+")");
+	    }
+	    else if ((a.charAt(i) >= '0') && (a.charAt(i) <= '9')) {
+	        p.push(a.charAt(i));
+	    }
+	}
+	return p.pop();
+}
+\end{lstlisting}
+
+
+% ------------------------------------------------------------------------------------------------------ %
+% ------------------------------------------------------------------------------------------------------ %
+
+
+
+% ------------------------------------------------------------------------------------------------------ %
+% ------------------------------------------------------------------------------------------------------ %
+
+
+\chapter{Compilation}
+\section{Généralités}
+\subsection{Définition}
+La compilation est la 'traduction' d'un programme en quelque chose qui sera compréhensible par la machine pour qu'elle puisse l’exécuter : une suite binaire.\\
+
+Ici on essaiera de reproduire (de façon simplifiée) la manière dont un compilateur fonctionne (pas de traduire le programme en binaire).
+
+\subsection{Principe}
+Le principe de fonctionnement du compilateur est d'utiliser un nombre pour se repérer dans le programme (le numéro de l'instruction) et de traduire pour chaque instruction ce qu'on doit faire : par exemple incrémenter l'instruction, affecter une valeur à une case de mémoire (que l'on représentera ici avec un tableau).\\
+On utilisera également une pile dont l'utilité apparaîtra pour la compilation de \hyperref[appel:fonction]{certains programmes} (ceux appelant des fonctions par exemple).\\
+
+On utilisera un \textit{switch} pour regarder la valeur de l'instruction.
+
+\subsection{Exemple}
+\begin{lstlisting}
+public static void exemple(){
+	int answer=42;
+	int p=17;
+	int z=answer+p;
+}
+\end{lstlisting}
+\bigskip
+Le programme compilé associé est :\\
+
+\begin{lstlisting}
+public static void compil(){
+	int[] memoire = new int[1000]; int inst=0;
+	while (true){ switch (inst){
+		case 0: memoire[0]=42; inst++; break;
+		case 1: memoire[1]=17; inst++; break;
+		case 2:	memoire[2]=memoire[0]+memoire[1];
+			inst=-1; break;
+		default: System.exit(0); }
+	}
+}
+\end{lstlisting}
+
+\section{Compilation de structures particulières}
+\textit{Note: la compilation de fonction récursive est vue au prochain chapitre}
+\subsection{Conditions}
+Les conditions sont écrites directement dans un case du \textit{switch} : si la condition est vraie on va à la ligne d'après et sinon on va à la fin du \textit{if} (ou au \textit{else} s'il y en a un).
+
+\subsection{Boucles}
+Les boucles sont exécutées en plusieurs temps.\\
+
+Dans le cas d'un \textit{for}, on exécute le première instruction (la création d'un compteur la plupart du temps), puis on se retrouve dans le cas d'un \textit{if} : si la condition indiquée dans la boucle n'est pas réalisée, on passe la boucle et sinon on exécute le contenu de la boucle avant d’exécuter l'instruction de fin de boucle (souvent incrémenter le compteur) et on recommence le test sur la condition.\\
+
+Dans le cas d'un \textit{while}, il n'y a pas d'instruction initiale ni d'instruction finale, on regarde simplement si la condition est vraie et dans ce cas on exécute le contenu de la boucle.\\
+Avec un \textit{Do while} la nuance est que la condition est vérifiée à la fin de l’exécution de la boucle et non pas au début (donc on exécute au moins une fois).
+
+\subsection{Appel de fonction\label{appel:fonction} et retour de valeurs}
+Dans le cas d'un appel de fonction, on va utiliser la pile pour savoir quelle valeur l'instruction va prendre au retour et éventuellement pour passer des variables en argument. On commence par ajouter dans la pile la valeur de retour de l'instruction puis on y ajoute les variables passées en argument. Elles auront des cases mémoire différentes de leur valeur hors de la fonction car ce sont des variables locales. A la fin de la fonction on donne à l'instruction la valeur du sommet de la pile (que l'on enlève) ; s'il y a une valeur à retourner, on l'ajoute sur la pile.
+
+\subsection{Exemple complet}
+Voici un exemple de programme (volontairement non optimisé) utilisant les structures particulières vues précédemment. 
+
+\begin{lstlisting}
+public static void coefBin(){
+	int n=42, k=0;
+	do{
+		int c=coef(k,n);
+		System.out.println(c);
+		k++;
+	} while(k<=n);
+}
+
+public static int coef (int k, int n){
+	if (k>n){ return 0; }
+	int c = facto(n)/(facto(k)*facto(n-k));
+	return c;
+}
+
+public static int facto (int a){
+	int c=1;
+	for (int i=2;i<=a;i++){ c*=i; }
+	return c;
+}
+\end{lstlisting}
+
+\newpage
+
+\subsubsection{Programme compilé}
+
+\begin{lstlisting}
+public static void compil(){
+  int[] memoire = new int[1000];
+  int inst = 0;
+  Stack<Integer> pile = new Stack<Integer>;
+	
+  while (true){
+  	switch (inst){
+		case 0 : memoire[0] = 42; inst++; break;
+		case 1 : memoire[1] = 0; inst++; break;
+		case 2 : pile.push(inst+1); pile.push(memoire[1]); 
+			pile.push(memoire[0]); inst=100; break;
+		case 3 : memoire[2]=pile.pop(); inst++; 
+			break;
+		case 4 : System.out.println(memoire[2]); inst++; break;
+		case 5 : memoire[1]++; inst++; break;
+		case 6 : if (memoire[1]<memoire[0]){ inst=2; }
+			 else{ inst++; } break;
+		case 7 : inst=-1; break;
+		
+		case 100 : memoire[100]=pile.pop(); inst++; break;
+		case 101 : memoire[101]=pile.pop(); inst++; break;
+		case 102 : if (memoire[100]<memoire[101]){ inst++; }
+      			   else{ inst=104; } break;
+		case 103 : inst=pile.pop(); pile.push(0); break;
+		case 104 : pile.push(inst+1);
+			   pile.push(memoire[100]-memoire[101]);
+			   inst=200; break;
+		case 105 : pile.push(inst+1); pile.push(memoire[101]);
+			   inst=200; break;
+		case 106 : pile.push(inst+1); pile.push(memoire[100]);
+			   inst=200; break;
+		case 107 : memoire[102]=pile.pop()/(pile.pop()*pile.pop());
+			   inst++; break;
+		case 108 : inst=pile.pop(); pile.push(memoire[102]); break;
+		
+		case 200 : memoire[200]=pile.pop(); inst++; break;
+		case 201 : memoire[201]=1; inst++; break;
+		case 202 : memoire[202]=2; inst++; break;
+		case 203 : if (memoire[202]<=memoire[201]){ inst++; }
+			   else{ inst=206; } break;
+		case 204 : memoire[201]*=memoire[202]; inst++; break;
+		case 205 : memoire[202]++; inst = 203;
+		case 206 : inst = pile.pop(); pile.push(memoire[201]); break; 
+		
+		default : System.exit(0);
+	}
+  }
+}
+\end{lstlisting}
+
+
+Condition : \textit{cases} 6, 102 et 203
+
+\textit{For} : \textit{cases} 202 à 205
+
+\textit{Do while} : \textit{cases} 2 à 6
+
+Appel de fonction : \textit{cases} 2, 104, 105, 106
+
+Retour d'une valeur : \textit{cases} 3, 103, 107, 108, 206
+
+
+% ------------------------------------------------------------------------------------------------------ %
+% ------------------------------------------------------------------------------------------------------ %
+
+
+
+% ------------------------------------------------------------------------------------------------------ %
+% ------------------------------------------------------------------------------------------------------ %
+
+
+\chapter{Programmation récursive}
+\section{Introduction}
+\subsection{Principe}
+La récursivité est un concept général qui peut être illustré dans (quasiment) tous les langages de programmation, et qui peut être utile dans de nombreuses situations.\\
+
+La définition la plus simple d'une fonction récursive est la suivante : c'est une fonction qui s'appelle elle-même. Si dans le corps (le contenu) de la fonction, vous l'utilisez elle-même, alors elle est récursive.
+
+\subsection{Exemple}
+\subsubsection{Factorielle}
+L'exemple habituel est la fonction factorielle qui renvoie le produit des entiers inférieurs ou égaux à un entier jusqu'à 1 :
+$n! = n \times (n-1) \times \dots \times 2 \times 1$.
+
+On note n! la "factorielle de n", et on défini cette fonction par $\left\{\begin{array}{rcl}
+0!&=& 1 \\ n!&=& n\times (n-1)! \end{array} \right.$
+
+\subsubsection{Fibonacci}
+On va utiliser pour exemple dans ce chapitre la fonction \textit{fibo} (suite de Fibonacci) ci-dessous.
+
+\begin{lstlisting}
+public int fibo (int n){
+	if (n==0 || n==1) return 1; return fibo(n-1)+fibo(n-2);
+}
+\end{lstlisting}
+
+\subsection{Fonction récursive terminale}
+On dit qu'une fonction est récursive terminale si l'appel récursif est la dernière instruction et qu'il n'y a pas d'opération avec cet appel récursif.\\
+
+Pour obtenir une fonction récursive terminale (lorsque c'est possible), on peut avoir à utiliser un accumulateur (qui est un argument supplémentaire contenant les résultats précédents) pour éviter d'avoir une opération à effectuer.
+
+\subsubsection{Exemple}
+\begin{lstlisting}
+int fiboTerm(int n, int s){ // s est un accumulateur
+	if (n==0 || n==1) return s+1; return fiboTerm(n-2,s+fiboTerm(n-1));
+}
+\end{lstlisting}
+
+\newpage
+
+\section{Programmation dynamique}
+\subsection{Principe}
+On appelle programmation dynamique une méthode de programmation récursive qui consiste à utiliser un tableau pour stocker des résultats précédemment calculés.\\
+
+En effet certains programmes récursifs vont avoir besoin de calculer plusieurs fois le même résultat, stocker les calculs effectués dans un tableau (ou autre) accessible à tout moment de l’exécution du programme permet d'éviter certains calculs.
+
+\subsection{Exemple}
+La suite de Fibonacci est définie par $F_0=1$, $F_1=1$ et $F_n=F_{n-1}+F_{n-2}$ (fonction \textit{fibo}).\\
+
+Ainsi pour calculer $F_n$, il faut calculer $F_{n-1}$ et $F_{n-2}$, mais pour calculer $F_{n-1}$ il faut calculer $F_{n-2}$ et $F_{n-3}$, et ainsi de suite. Ainsi pour calculer $F_n$ il faut calculer deux fois $F_{n-2}$, $F_{n-3}$, etc. \\
+
+On voit bien dans cet exemple que stocker les résultats une fois calculés permet d'être beaucoup plus efficace dans le calcul d'un terme de la suite.
+
+\begin{lstlisting}
+static int[] t=new int[100]; 
+// on peut mettre plus de 100 selon le nombre de termes que l'on veut calculer
+
+public int fiboDyna(int n){
+	if (n==0 || n==1) return 1; 
+	if (t[n]==0) t[n]=fiboDyna(n-1)+fiboDyna(n-2); return t[n];
+}
+\end{lstlisting}
+
+\section{Backtracking}
+\subsection{Principe}
+Le retour sur trace, appelé aussi backtracking en anglais, consiste à revenir légèrement en arrière sur des décisions prises afin de sortir d'un blocage.\\
+
+La méthode des essais et erreurs constitue un exemple simple de backtracking.\\
+
+Le terme est surtout utilisé en programmation, où il désigne une stratégie pour trouver des solutions à des problèmes de satisfaction de contraintes.
+
+\subsection{Exemple}
+Pour résoudre un sudoku, on utilise un algorithme de backtracking : \\ 
+\begin{enumerate}
+\item on donne à la case la plus en haut et la plus à gauche la valeur la plus faible possible
+\item on répète la première opération jusqu'à rencontrer une contradiction (plusieurs fois le même chiffre dans la même ligne par exemple)
+\item lorsque l'on rencontre une erreur, on retourne à la dernière case que l'on a modifiée et on l'augmente (si cette case était déjà au maximum, on va à la case précédente)
+\item on retourne alors à l'opération 1
+\end{enumerate}
+
+\newpage
+
+\section{Compilation}
+\subsection{Principe}
+Il existe deux cas : si la fonction est récursive terminale, on peut la compiler comme une fonction non récursive appelant une autre fonction.\\
+
+Dans le cas contraire, il faut utiliser un objet particulier, les "blocks", qui vont être propres à chaque fonction et qui vont contenir les arguments et autres variables de cette fonction ainsi que l'instruction et la valeur de retour.
+
+\subsection{Exemple}
+On va traduire la fonction \textit{fibo}.
+
+\bigskip
+
+\begin{lstlisting}
+public int fibo (int n){
+	if (n==0 || n==1) return 1; return fibo(n-1)+fibo(n-2);
+}
+
+
+class Bloc{
+	int retour; // point de retour
+	int n; // argument
+	int valeur; // valeur renvoyee
+	
+	Bloc(int r, int m, int v){ 
+		retour=r; n=m; valeur=v;
+	}
+}
+
+import java.util.*;
+class compil{ public static void main(String[] args){
+	int inst=0, retour;
+	Stack<Bloc> pile=new Stack<Bloc>();
+	Bloc bloc=new Bloc(-1,n,0);
+	pile.push(bloc);
+	while (!pile.empty()){ switch(inst){
+		case 0 :
+		  if (pile.peek().n==0 || pile.peek().n==1)
+			{ pile.peek().valeur=1; inst=pile.peek().retour; }
+		  else inst++;
+		break;
+		case 1:
+			pile.push(new bloc(2,pile.peek().n-1,0)); inst=0;
+		break;
+		case 2:
+			pile.push(new bloc(3,pile.peek().n-1,0)); inst=0;
+		break;
+		case 3:
+			int i=pile.pop().valeur+pile.pop().valeur();
+			pile.peek().valeur=i;
+			inst=pile.peek().retour;
+		break;
+		default : retour=pile.pop().valeur;
+	} }
+} }
+\end{lstlisting}
+
+\newpage
+
+\section{Conversion en fonction itérative}
+\subsection{Principe}
+Les fonctions récursives peuvent être transformées en des fonctions itératives. Pour cela on peut avoir besoin d'utiliser une pile qui stocke la liste des appels à effectuer (mais dans certains cas ce n'est pas nécessaire).
+
+\subsection{Exemple}
+\begin{lstlisting}
+int fiboIter(int n){
+	Stack<Integer> pile=new Stack<Integer>;
+	// on doit utiliser une pile
+	pile.add(n);
+	int s=0;
+	while (!pile.empty()){
+		int i=pile.pop();
+		if (i==0 || i==1){
+			s+=1;
+		}else{
+			pile.push(i-1);
+			pile.push(i-2);
+		}
+	}
+	return s;
+}
+\end{lstlisting}
+
+
+
+
+
+
+
+
+
+\end{document}
